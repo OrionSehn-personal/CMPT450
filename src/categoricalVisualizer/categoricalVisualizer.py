@@ -54,8 +54,33 @@ def get_sub_category_options(filename, category):
                         )["characteristic"].unique()]
             
         case _:
-            print("default")
             return []
+
+# figure handler
+def get_figure(file, year, category, sub_category):
+    print("inside get_figure")
+    if None in [file, year, category, sub_category]:
+        pass
+    else:
+        match file:
+            case "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv":
+                print("YEEESSSS")
+                df = dataframes[
+                    "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv"
+                    ].query(
+                        f"characteristic_group == '{category}' and characteristic == '{sub_category}'"
+                        )
+                fig = px.bar(
+                    df, 
+                    x="time_period", 
+                    y="characteristic", 
+                    color="characteristic", 
+                    title=f"{sub_category} by {year}"
+                    )
+                return fig
+            case _:
+                pass
+
 #--------------------------------------------------------------------------------------------------------
 # Iniitalization
 #--------------------------------------------------------------------------------------------------------
@@ -73,11 +98,17 @@ for filename in filenames:
 # layout
 #--------------------------------------------------------------------------------------------------------
 app.layout = html.Div([
+    dcc.Graph(id='graph'),
     dcc.Dropdown(
         id='file-selector',
         options=filenames,
         placeholder="Select a Data Set...",
-    ),
+        ),
+    dcc.Dropdown(
+        id='year-selector' ,
+        placeholder='Select a Year... (All by default)',
+        style={"display": "none"}
+        ),
     dcc.Dropdown(
         id='category-selector', 
         placeholder="Select a category...",
@@ -94,6 +125,75 @@ app.layout = html.Div([
 # callbacks
 #--------------------------------------------------------------------------------------------------------
 
+# Callack to update the year selector visibility
+@app.callback(
+    Output('year-selector', 'style'),
+    Input('file-selector', 'value')
+    )
+def update_year_selector_visibility(value):
+    if value is None:
+        return {"display": "none"}
+    else:
+        return {"display": "block"}
+
+# callback to update the year selector options
+@app.callback(
+    Output('year-selector', 'options'),
+    Input('file-selector', 'value')
+    )
+def update_year_selector_options(value):
+    if value is None:
+        return []
+    else:
+        return [{"label": "All available years", "value": "all"}] + [
+            {"label": str(year)[0:4] + "-" + str(year)[4:], "value": year} 
+            for year in dataframes[value]["time_period"].unique()]
+        
+
+    # callback to update the category selector visibility
+    @app.callback(
+        Output('category-selector', 'style'),
+        Input('file-selector', 'value')
+        )
+    def update_category_selector_visibility(value):
+        if value is None:
+            return {"display": "none"}
+        else:
+            return {"display": "block"}
+
+    # callback to update the category selector options
+    @app.callback(
+        Output('category-selector', 'options'),
+        Input('file-selector', 'value')
+        )
+    def update_category_selector_options(value):
+        if value is None:
+            return []
+        else:
+            return get_category_options(value)
+
+    # callback to update the sub-category selector visibility
+    @app.callback(
+        Output('sub-category-selector', 'style'),
+        Input('file-selector', 'value')
+        )
+    def update_sub_category_selector_visibility(value):
+        if value is None:
+            return {"display": "none"}
+        else:
+            return {"display": "block"}
+
+    # callback to update the sub-category selector options
+    @app.callback(
+        Output('sub-category-selector', 'options'),
+        Input('file-selector', 'value'),
+        Input('category-selector', 'value')
+        )
+    def update_sub_category_selector_options(value, category):
+        if value is None:
+            return []
+        else:
+            return get_sub_category_options(value, category)
 # Callback to update the category options visibility
 @app.callback(
     Output('category-selector', 'style'),
@@ -139,6 +239,17 @@ def update_sub_category_options(category, file):
     
     return get_sub_category_options(file, category)
 
+# Callback to update the graph
+@app.callback(
+    Output('graph', 'figure'),
+    [Input('file-selector', 'value'),
+     Input('year-selector', 'value'),
+     Input('category-selector', 'value'),
+     Input('sub-category-selector', 'value'),
+    ]
+    )
+def update_graph(file, year, category, sub_category):
+    return get_figure(file, year, category, sub_category)
 #---------------------------------------------------------------------------------------------------------
 # Run the app
 #---------------------------------------------------------------------------------------------------------
