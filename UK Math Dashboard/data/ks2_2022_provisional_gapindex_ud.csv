@@ -1,0 +1,13 @@
+time_period,time_identifier,geographic_level,country_code,country_name,version,total_disadvantaged_pupils,total_other_pupils,disadvantage_gap_index
+201011,Academic year,National,E92000001,England,Final,102179,443925,3.433262982
+201112,Academic year,National,E92000001,England,Final,157158,379757,3.233865814
+201213,Academic year,National,E92000001,England,Final,164026,369349,3.158796072
+201314,Academic year,National,E92000001,England,Final,171308,382487,3.153381037
+201415,Academic year,National,E92000001,England,Final,180998,390836,3.10299598
+201516,Academic year,National,E92000001,England,Final,182481,394672,3.025195075
+201617,Academic year,National,E92000001,England,Final,186533,406101,2.999489271
+201718,Academic year,National,E92000001,England,Final,187386,425035,2.898499034
+201819,Academic year,National,E92000001,England,Final,194504,444038,2.913380939
+201920,Academic year,National,E92000001,England,Final,x,x,x
+202021,Academic year,National,E92000001,England,Final,x,x,x
+202122,Academic year,National,E92000001,England,Provisional,193250,461409,3.212395855
