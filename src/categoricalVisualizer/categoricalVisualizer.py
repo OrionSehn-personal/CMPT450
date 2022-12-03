@@ -65,22 +65,24 @@ def get_figure(file, year, category, sub_category, metric, gender):
      if None not in [file, year, category, sub_category, metric]:
         match file:
             case "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv":
-                query = f"characteristic_group == '{category}' \
-                        and characteristic == '{sub_category}' \
-                        and gender == '{gender}'"
+                query = f"characteristic_group=='{category}' \
+                        and characteristic=='{sub_category}' \
+                        and gender=='{gender}' \
+                        and {metric}!='x'"
                         
-                if year != "All":
-                    query += f" and time_period == '{year}'"
-                        
+                if year != "all":
+                    query += f" and time_period=={year}"
+                
+                
                 df = dataframes[
                     "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv"
                     ].query(query)
                 
                 fig = px.bar(
                     df, 
-                    x="time_period", 
-                    y="pt_mat_working_below_assessment", 
-                    color="characteristic", 
+                    x="characteristic" if year!="all" else df.time_period.astype('string'),
+                    y=metric,
+                    barmode='group',
                     title=f"{sub_category} by {year}"
                     )
                 return fig
@@ -110,7 +112,7 @@ filenames = load_csv_names()
 # Load data frames
 for filename in filenames:
     dataframes[filename["value"]] = pd.read_csv("data/" + filename["value"])
-    
+#dataframes["ks2_national_pupil_characteristics_2016_to_2022_provisional.csv"]["Academic Year"] = dataframes["ks2_national_pupil_characteristics_2016_to_2022_provisional.csv"]["time_period"].astype('string')
 
 #--------------------------------------------------------------------------------------------------------
 # layout
