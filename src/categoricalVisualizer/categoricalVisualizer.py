@@ -77,14 +77,21 @@ def get_figure(file, year, category, sub_category, metric, gender):
                 df = dataframes[
                     "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv"
                     ].query(query)
-                
+                chart_title = f"{trim_dropdown_option(metric)} by year" if year == "all" else f"{trim_dropdown_option(metric)} for Academic Year: {year}"
                 fig = px.bar(
                     df, 
                     x="characteristic" if year!="all" else df.time_period.astype('string'),
                     y=metric,
                     barmode='group',
-                    title=f"{sub_category} by {year}"
+                    title=chart_title,
+                    text_auto=True,
                     )
+                    
+                fig.update_xaxes(title_text="Year" if year=="all" else "Characteristic",
+                                 type="category",
+                                 
+                                 )
+                fig.update_yaxes(type="linear", autotypenumbers='convert types', visible=False)
                 return fig
             case _:
                 return default
