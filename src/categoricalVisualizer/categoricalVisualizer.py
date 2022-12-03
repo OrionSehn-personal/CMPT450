@@ -59,7 +59,7 @@ def get_sub_category_options(filename, category):
             return []
         
 # figure handler
-def get_figure(file, year, category, sub_category, metric, gender):
+def get_figure(file, year, category, sub_category, metric, gender, chart_type):
      df = px.data.iris() 
      default = px.scatter(df,title = "Default, override later", x="sepal_width", y="sepal_length", color="species")
      if None not in [file, year, category, sub_category, metric]:
@@ -78,20 +78,42 @@ def get_figure(file, year, category, sub_category, metric, gender):
                     "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv"
                     ].query(query)
                 chart_title = f"{trim_dropdown_option(metric)} by year" if year == "all" else f"{trim_dropdown_option(metric)} for Academic Year: {year}"
-                fig = px.bar(
-                    df, 
-                    x="characteristic" if year!="all" else df.time_period.astype('string'),
-                    y=metric,
-                    barmode='group',
-                    title=chart_title,
-                    text_auto=True,
+                fig = None
+                if chart_type == 'bar': 
+                    fig = px.bar(
+                        df, 
+                        x="characteristic" if year!="all" else df.time_period.astype('string'),
+                        y=metric,
+                        barmode='group',
+                        title=chart_title,
+                        text_auto=True,
                     )
-                    
-                fig.update_xaxes(title_text="Year" if year=="all" else "Characteristic",
+                    fig.update_xaxes(title_text="Year" if year=="all" else "Characteristic",
                                  type="category",
                                  
                                  )
+                
+                elif chart_type == 'line' and year == "all":
+                    fig = px.line(
+                        df,
+                        x=df.time_period.astype('string'),
+                        y=metric,
+                        title=chart_title,
+                        )
+                    fig.update_xaxes(title_text="Year")
+                else:
+                    fig = px.scatter(
+                        df,
+                        x="characteristic",
+                        y=metric,
+                        title=chart_title,
+                        text=metric
+                        )
+                    fig.update_traces(textposition='top center')
+                    fig.update_xaxes(title_text="Characteristic")
+                    
                 fig.update_yaxes(type="linear", autotypenumbers='convert types', visible=False)
+                    
                 return fig
             case _:
                 return default
@@ -119,7 +141,6 @@ filenames = load_csv_names()
 # Load data frames
 for filename in filenames:
     dataframes[filename["value"]] = pd.read_csv("data/" + filename["value"])
-#dataframes["ks2_national_pupil_characteristics_2016_to_2022_provisional.csv"]["Academic Year"] = dataframes["ks2_national_pupil_characteristics_2016_to_2022_provisional.csv"]["time_period"].astype('string')
 
 #--------------------------------------------------------------------------------------------------------
 # layout
@@ -133,7 +154,7 @@ app.layout = html.Div([
         ),
     dcc.Dropdown(
         id='year-selector' ,
-        placeholder='Select a Year... (All by default)',
+        placeholder='Select a Year...',
         style={"display": "none"}
         ),
     dcc.Dropdown(
@@ -162,11 +183,34 @@ app.layout = html.Div([
         style={'display': 'block'},
         inline=True
         ),
+    dcc.RadioItems(
+        id='chart-type-selector',
+        options=[
+            {'label': "Line Chart", 'value': "line"},
+            {'label': "Bar Chart", 'value': "bar"},
+            ],
+        value='bar',
+        inline=True,
+        style={'display': 'block'}
+    )
+
 ])
 
 #--------------------------------------------------------------------------------------------------------
 # callbacks
 #--------------------------------------------------------------------------------------------------------
+
+# Callback to show file description
+@app.callback(
+    [Output('file-summary', 'value'), 
+     ],
+    Input('file-selector', 'value')
+    )
+def populate_file_description(value):
+    if value == None:
+        return [""]
+
+    return [guidance[value]["summary"]]
 
 # Callack to update the year selector visibility
 @app.callback(
@@ -240,7 +284,7 @@ def update_year_selector_options(value):
 # Callback to update the category options visibility
 @app.callback(
     Output('category-selector', 'style'),
-    Input('file-selector', 'value')
+    Input('year-selector', 'value')
     )
 def update_category_visibility(value):
     if value is None:
@@ -307,12 +351,13 @@ def update_metric_selector(sub_category, file):
      Input('category-selector', 'value'),
      Input('sub-category-selector', 'value'),
      Input('metric-selector', 'value'),
-     Input('gender-selector', 'value')
+     Input('gender-selector', 'value'),
+     Input('chart-type-selector', 'value')
     ]
     
     )
-def update_graph(file, year, category, sub_category, metric, gender):
-    return get_figure(file, year, category, sub_category, metric, gender)
+def update_graph(file, year, category, sub_category, metric, gender, chart_type):
+    return get_figure(file, year, category, sub_category, metric, gender, chart_type)
 #---------------------------------------------------------------------------------------------------------
 # Run the app
 #---------------------------------------------------------------------------------------------------------
