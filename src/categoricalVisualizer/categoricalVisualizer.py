@@ -16,7 +16,9 @@ guidance = json.loads(open("data/data-guidance.json", "r").read())
 #--------------------------------------------------------------------------------------------------------
 def trim_dropdown_option(input):
     try: 
-        return input.replace("_", " ").replace(".csv", "").title() 
+        return input.replace(".csv", "")\
+            .replace("_", " ")\
+            .title() 
     except:  
         return input 
 
@@ -55,32 +57,46 @@ def get_sub_category_options(filename, category):
             
         case _:
             return []
-
+        
 # figure handler
-def get_figure(file, year, category, sub_category):
-    print("inside get_figure")
-    if None in [file, year, category, sub_category]:
-        pass
-    else:
+def get_figure(file, year, category, sub_category, metric):
+     df = px.data.iris() 
+     default = px.scatter(df,title = "Default, override later", x="sepal_width", y="sepal_length", color="species")
+     if None not in [file, year, category, sub_category, metric]:
         match file:
             case "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv":
-                print("YEEESSSS")
                 df = dataframes[
                     "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv"
                     ].query(
-                        f"characteristic_group == '{category}' and characteristic == '{sub_category}'"
+                        f"characteristic_group == '{category}' \
+                        and characteristic == '{sub_category}' \
+                        and time_period == {year}"
                         )
+                
                 fig = px.bar(
                     df, 
                     x="time_period", 
-                    y="characteristic", 
+                    y="pt_mat_working_below_assessment", 
                     color="characteristic", 
                     title=f"{sub_category} by {year}"
                     )
                 return fig
             case _:
-                pass
+                return default
+     else:
+        return default
 
+# get metric options from file
+def get_metric_options(filename):
+    match filename:
+        case "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv":
+            return [
+                {"label": trim_dropdown_option(col), "value": col} 
+                for col in dataframes[
+                    "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv"
+                    ].columns if (col.startswith("pt_") or col.startswith("t_"))]
+        case _:
+            return []
 #--------------------------------------------------------------------------------------------------------
 # Iniitalization
 #--------------------------------------------------------------------------------------------------------
@@ -92,7 +108,6 @@ filenames = load_csv_names()
 for filename in filenames:
     dataframes[filename["value"]] = pd.read_csv("data/" + filename["value"])
     
-
 
 #--------------------------------------------------------------------------------------------------------
 # layout
@@ -118,7 +133,12 @@ app.layout = html.Div([
         id='sub-category-selector',
         placeholder="Select a sub-category...",
         style={'display': 'none'}
-    )
+    ),
+    dcc.Dropdown(
+        id='metric-selector',
+        placeholder="Select a metric...",
+        style={'display': 'none'}
+        ),  
 ])
 
 #--------------------------------------------------------------------------------------------------------
@@ -239,6 +259,23 @@ def update_sub_category_options(category, file):
     
     return get_sub_category_options(file, category)
 
+# Callback to update the metric selector visibility and options
+@app.callback(
+    [Output('metric-selector', 'style'),
+     Output('metric-selector', 'options')],
+     [Input('sub-category-selector', 'value'),
+      Input('file-selector', 'value')]
+     )
+def update_metric_selector(sub_category, file):
+    if sub_category is None:
+        return {'display': 'none'}, []
+    if 'file-selector' in ctx.triggered:
+        return {'display': 'none'}, []
+    
+    return {'display': 'block'}, get_metric_options(file)
+     
+
+
 # Callback to update the graph
 @app.callback(
     Output('graph', 'figure'),
@@ -246,10 +283,11 @@ def update_sub_category_options(category, file):
      Input('year-selector', 'value'),
      Input('category-selector', 'value'),
      Input('sub-category-selector', 'value'),
-    ]
+     Input('metric-selector', 'value')]
+    
     )
-def update_graph(file, year, category, sub_category):
-    return get_figure(file, year, category, sub_category)
+def update_graph(file, year, category, sub_category, metric):
+    return get_figure(file, year, category, sub_category, metric)
 #---------------------------------------------------------------------------------------------------------
 # Run the app
 #---------------------------------------------------------------------------------------------------------
