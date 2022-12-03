@@ -19,11 +19,17 @@ sidebar = dbc.Nav(
             className="bg-light",
 )
 
-app.layout = dbc.Container([
-    dbc.Row([
-        dbc.Col(html.Div("UK Math Visualization Dashboard",
-                         style={'fontSize':25, 'textAlign':'left'}))
-    ]),
+app.layout = dbc.Container(
+    [
+    dbc.Row(
+        [
+            dbc.Col(
+                html.Div("UK Math Visualization Dashboard",
+                className="dashboard-title"
+            )
+        )
+        ],
+    ),
 
     html.Hr(),
 
