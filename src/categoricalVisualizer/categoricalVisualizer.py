@@ -59,19 +59,22 @@ def get_sub_category_options(filename, category):
             return []
         
 # figure handler
-def get_figure(file, year, category, sub_category, metric):
+def get_figure(file, year, category, sub_category, metric, gender):
      df = px.data.iris() 
      default = px.scatter(df,title = "Default, override later", x="sepal_width", y="sepal_length", color="species")
      if None not in [file, year, category, sub_category, metric]:
         match file:
             case "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv":
+                query = f"characteristic_group == '{category}' \
+                        and characteristic == '{sub_category}' \
+                        and gender == '{gender}'"
+                        
+                if year != "All":
+                    query += f" and time_period == '{year}'"
+                        
                 df = dataframes[
                     "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv"
-                    ].query(
-                        f"characteristic_group == '{category}' \
-                        and characteristic == '{sub_category}' \
-                        and time_period == {year}"
-                        )
+                    ].query(query)
                 
                 fig = px.bar(
                     df, 
@@ -139,6 +142,17 @@ app.layout = html.Div([
         placeholder="Select a metric...",
         style={'display': 'none'}
         ),  
+    dcc.RadioItems(
+        id='gender-selector',
+        options=[
+            {'label': "All", 'value': "Total"},
+            {'label': "Male", 'value': "Boys"},
+            {'label': "Female", 'value': "Girls"},
+            ],
+        value='Total',
+        style={'display': 'block'},
+        inline=True
+        ),
 ])
 
 #--------------------------------------------------------------------------------------------------------
@@ -283,11 +297,13 @@ def update_metric_selector(sub_category, file):
      Input('year-selector', 'value'),
      Input('category-selector', 'value'),
      Input('sub-category-selector', 'value'),
-     Input('metric-selector', 'value')]
+     Input('metric-selector', 'value'),
+     Input('gender-selector', 'value')
+    ]
     
     )
-def update_graph(file, year, category, sub_category, metric):
-    return get_figure(file, year, category, sub_category, metric)
+def update_graph(file, year, category, sub_category, metric, gender):
+    return get_figure(file, year, category, sub_category, metric, gender)
 #---------------------------------------------------------------------------------------------------------
 # Run the app
 #---------------------------------------------------------------------------------------------------------
