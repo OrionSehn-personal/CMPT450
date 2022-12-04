@@ -60,8 +60,7 @@ def get_sub_category_options(filename, categories):
         
 # figure handler
 def get_figure(file, year, categories, sub_categories, metric, gender, chart_type):
-     df = px.data.iris() 
-     default = px.scatter(df,title = "Default, override later", x="sepal_width", y="sepal_length", color="species")
+    
      if None not in [file, year, categories, sub_categories, metric]:
         match file:
             case "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv":
@@ -131,12 +130,28 @@ def get_figure(file, year, categories, sub_categories, metric, gender, chart_typ
                     fig.update_xaxes(title_text="Characteristic")
                     
                 fig.update_yaxes(type="linear", autotypenumbers='convert types', visible=False)
-                    
+                print(file, year, categories, sub_categories, metric, gender, chart_type)
                 return fig
             case _:
-                return default
+                return get_figure(
+                        "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv",
+                        "all",
+                        ['All pupils', 'Ethnic minor', 'First language'],
+                        ['Total', 'Known or believed to be English'],
+                        "pt_mat_met_higher_standard", 
+                        "Total", 
+                        "bar"
+                    )
      else:
-        return default
+        return get_figure(
+                        "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv",
+                        "all",
+                        ['All pupils', 'Ethnic minor', 'First language'],
+                        ['Total', 'Known or believed to be English'],
+                        "pt_mat_met_higher_standard", 
+                        "Total", 
+                        "bar"
+                    )
 
 # get metric options from file
 def get_metric_options(filename):
