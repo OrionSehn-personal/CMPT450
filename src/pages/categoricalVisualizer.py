@@ -419,8 +419,4 @@ def update_metric_selector(sub_category, file):
     )
 def update_graph(file, year, categories, sub_categories, metric, gender, chart_type, description):
     return get_figure(file, year, categories, sub_categories, metric, gender, chart_type, description)
-#---------------------------------------------------------------------------------------------------------
-# Run the app
-#---------------------------------------------------------------------------------------------------------
-if __name__ == '__main__':
-    app.run_server(debug=True)
+
