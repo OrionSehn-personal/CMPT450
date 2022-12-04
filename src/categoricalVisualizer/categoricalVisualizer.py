@@ -1,4 +1,4 @@
-from tkinter import Place
+
 from dash import Dash, dcc, html, callback_context as ctx
 import plotly.express as px
 import pandas as pd
@@ -44,7 +44,7 @@ def get_category_options(filename):
             return []
         
 # get sub category options based on filename and category
-def get_sub_category_options(filename, category):
+def get_sub_category_options(filename, categories):
     match filename:
         case "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv":
             return [
@@ -52,21 +52,21 @@ def get_sub_category_options(filename, category):
                 for col in dataframes[
                     "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv"
                     ].query(
-                        f"characteristic_group == '{category}'"
+                        f"characteristic_group in {categories}"
                         )["characteristic"].unique()]
             
         case _:
             return []
         
 # figure handler
-def get_figure(file, year, category, sub_category, metric, gender, chart_type):
+def get_figure(file, year, categories, sub_categories, metric, gender, chart_type):
      df = px.data.iris() 
      default = px.scatter(df,title = "Default, override later", x="sepal_width", y="sepal_length", color="species")
-     if None not in [file, year, category, sub_category, metric]:
+     if None not in [file, year, categories, sub_categories, metric]:
         match file:
             case "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv":
-                query = f"characteristic_group=='{category}' \
-                        and characteristic=='{sub_category}' \
+                query = f"characteristic_group in {categories} \
+                        and characteristic in {sub_categories} \
                         and gender=='{gender}' \
                         and {metric}!='x'"
                         
@@ -87,11 +87,19 @@ def get_figure(file, year, category, sub_category, metric, gender, chart_type):
                         barmode='group',
                         title=chart_title,
                         text_auto=True,
+                        color='characteristic'
                     )
                     fig.update_xaxes(title_text="Year" if year=="all" else "Characteristic",
                                  type="category",
                                  
                                  )
+                    fig.update_layout(
+                        xaxis = dict(
+                            tickmode = 'array',
+                            tickvals = [201516, 201617, 201718, 201819, 201920, 202021, 202122],
+                            ticktext = ['2015-16','2016-17', '2017-18', '2018-19', '2019-20', '2020-21', '2021-22']
+                            )
+                    )
                 
                 elif chart_type == 'line' and year == "all":
                     fig = px.line(
@@ -99,15 +107,25 @@ def get_figure(file, year, category, sub_category, metric, gender, chart_type):
                         x=df.time_period.astype('string'),
                         y=metric,
                         title=chart_title,
+                        color="characteristic"
                         )
                     fig.update_xaxes(title_text="Year")
+                    fig.update_layout(
+                        xaxis = dict(
+                            tickmode = 'array',
+                            tickvals = [201617, 201718, 201819, 201920, 202021, 202122],
+                            ticktext = ['2016-17', '2017-18', '2018-19', '2019-20', '2020-21', '2021-22']
+                            )
+                    )
+
                 else:
                     fig = px.scatter(
                         df,
                         x="characteristic",
                         y=metric,
                         title=chart_title,
-                        text=metric
+                        text=metric,
+                        color="characteristic"
                         )
                     fig.update_traces(textposition='top center')
                     fig.update_xaxes(title_text="Characteristic")
@@ -160,12 +178,14 @@ app.layout = html.Div([
     dcc.Dropdown(
         id='category-selector', 
         placeholder="Select a category...",
-        style={'display': 'none'}
+        style={'display': 'none'},
+        multi=True
         ),
     dcc.Dropdown(
         id='sub-category-selector',
         placeholder="Select a sub-category...",
-        style={'display': 'none'}
+        style={'display': 'none'},
+        multi=True
     ),
     dcc.Dropdown(
         id='metric-selector',
@@ -276,11 +296,11 @@ def update_year_selector_options(value):
         Input('file-selector', 'value'),
         Input('category-selector', 'value')
         )
-    def update_sub_category_selector_options(value, category):
+    def update_sub_category_selector_options(file, categories):
         if value is None:
             return []
         else:
-            return get_sub_category_options(value, category)
+            return get_sub_category_options(file, categories)
 # Callback to update the category options visibility
 @app.callback(
     Output('category-selector', 'style'),
@@ -356,8 +376,8 @@ def update_metric_selector(sub_category, file):
     ]
     
     )
-def update_graph(file, year, category, sub_category, metric, gender, chart_type):
-    return get_figure(file, year, category, sub_category, metric, gender, chart_type)
+def update_graph(file, year, categories, sub_categories, metric, gender, chart_type):
+    return get_figure(file, year, categories, sub_categories, metric, gender, chart_type)
 #---------------------------------------------------------------------------------------------------------
 # Run the app
 #---------------------------------------------------------------------------------------------------------
