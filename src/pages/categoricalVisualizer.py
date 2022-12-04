@@ -246,27 +246,35 @@ layout = dbc.Container([
                 html.P(id='metric-description', children ='')
             )
     ]),
-        dcc.RadioItems(
-            id='gender-selector',
-            options=[
-                {'label': "All", 'value': "Total"},
-                {'label': "Male", 'value': "Boys"},
-                {'label': "Female", 'value': "Girls"},
-                ],
-            value='Total',
-            style={'display': 'block'},
-            inline=True
-            ),
-        dcc.RadioItems(
-            id='chart-type-selector',
-            options=[
-                {'label': "Line Chart", 'value': "line"},
-                {'label': "Bar Chart", 'value': "bar"},
-                ],
-            value='bar',
-            inline=True,
-            style={'display': 'block'}
-        )
+    dbc.Row([
+        dbc.Col([
+            html.P("Select gender: "),
+            dcc.RadioItems(
+                id='gender-selector',
+                options=[
+                    {'label': " All_ ", 'value': "Total"},
+                    {'label': " Male_ ", 'value': "Boys"},
+                    {'label': " Female ", 'value': "Girls"},
+                    ],
+                value='Total'
+                )
+        ]),
+        dbc.Col([
+            html.P("Select chart type:"),
+            dcc.RadioItems(
+                id='chart-type-selector',
+                options=[
+                    {'label': " Line Chart_ ", 'value': "line"},
+                    {'label': " Bar Chart ", 'value': "bar"},
+                    ],
+                value='bar'
+            )
+        ]),
+        dbc.Col(),
+        dbc.Col()
+        ]),
+        html.P(),
+        html.P("Note: data was not widely collected during the 2019-20 and 2020-21 academic years due to covid"),
     ])  
 
 
