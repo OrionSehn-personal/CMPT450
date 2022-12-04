@@ -2,3 +2,5 @@
 /CMPT450.sln
 /CMPT450.pyproj
 .DS_Store
+/src/pages/__pycache__
+/CMPT450.pyproj.user
