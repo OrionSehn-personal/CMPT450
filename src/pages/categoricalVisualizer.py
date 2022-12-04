@@ -1,11 +1,11 @@
-
-from dash import Dash, dcc, html, callback_context as ctx
+import dash
+from dash import dcc, html, callback_context as ctx, callback
 import plotly.express as px
 import pandas as pd
 from dash.dependencies import Input, Output
 import json
 
-app = Dash(__name__)
+dash.register_page(__name__, name='Student Characteristic')
 
 dataframes = {}
 dataframe_name = None
@@ -163,7 +163,9 @@ for filename in filenames:
 #--------------------------------------------------------------------------------------------------------
 # layout
 #--------------------------------------------------------------------------------------------------------
-app.layout = html.Div([
+
+layout = html.Div([
+    dcc.Markdown('## Education Statistics by Student Characteristic'),
     dcc.Graph(id='graph'),
     dcc.Dropdown(
         id='file-selector',
@@ -221,7 +223,7 @@ app.layout = html.Div([
 #--------------------------------------------------------------------------------------------------------
 
 # Callback to show file description
-@app.callback(
+@callback(
     [Output('file-summary', 'value'), 
      ],
     Input('file-selector', 'value')
@@ -233,7 +235,7 @@ def populate_file_description(value):
     return [guidance[value]["summary"]]
 
 # Callack to update the year selector visibility
-@app.callback(
+@callback(
     Output('year-selector', 'style'),
     Input('file-selector', 'value')
     )
@@ -244,7 +246,7 @@ def update_year_selector_visibility(value):
         return {"display": "block"}
 
 # callback to update the year selector options
-@app.callback(
+@callback(
     Output('year-selector', 'options'),
     Input('file-selector', 'value')
     )
@@ -258,7 +260,7 @@ def update_year_selector_options(value):
         
 
     # callback to update the category selector visibility
-    @app.callback(
+    @callback(
         Output('category-selector', 'style'),
         Input('file-selector', 'value')
         )
@@ -269,7 +271,7 @@ def update_year_selector_options(value):
             return {"display": "block"}
 
     # callback to update the category selector options
-    @app.callback(
+    @callback(
         Output('category-selector', 'options'),
         Input('file-selector', 'value')
         )
@@ -280,7 +282,7 @@ def update_year_selector_options(value):
             return get_category_options(value)
 
     # callback to update the sub-category selector visibility
-    @app.callback(
+    @callback(
         Output('sub-category-selector', 'style'),
         Input('file-selector', 'value')
         )
@@ -291,7 +293,7 @@ def update_year_selector_options(value):
             return {"display": "block"}
 
     # callback to update the sub-category selector options
-    @app.callback(
+    @callback(
         Output('sub-category-selector', 'options'),
         Input('file-selector', 'value'),
         Input('category-selector', 'value')
@@ -302,7 +304,7 @@ def update_year_selector_options(value):
         else:
             return get_sub_category_options(file, categories)
 # Callback to update the category options visibility
-@app.callback(
+@callback(
     Output('category-selector', 'style'),
     Input('year-selector', 'value')
     )
@@ -312,7 +314,7 @@ def update_category_visibility(value):
     return {'display': 'block'}
 
 # Callback to update the category options
-@app.callback(
+@callback(
     Output('category-selector', 'options'),
     Input('file-selector', 'value')
     )
@@ -323,7 +325,7 @@ def update_column_options(value):
 
 
 # Callback to update the sub-category options visibility
-@app.callback(
+@callback(
     Output('sub-category-selector', 'style'),
     Input('category-selector', 'value'),
     )
@@ -333,7 +335,7 @@ def update_sub_column_visibility(value):
     return {'display': 'block'}
 
 # Callback to update the sub-category options
-@app.callback(
+@callback(
     Output('sub-category-selector', 'options'),
     [Input('category-selector', 'value'),
      Input('file-selector', 'value')]
@@ -347,7 +349,7 @@ def update_sub_category_options(category, file):
     return get_sub_category_options(file, category)
 
 # Callback to update the metric selector visibility and options
-@app.callback(
+@callback(
     [Output('metric-selector', 'style'),
      Output('metric-selector', 'options')],
      [Input('sub-category-selector', 'value'),
@@ -364,7 +366,7 @@ def update_metric_selector(sub_category, file):
 
 
 # Callback to update the graph
-@app.callback(
+@callback(
     Output('graph', 'figure'),
     [Input('file-selector', 'value'),
      Input('year-selector', 'value'),
