@@ -10,7 +10,7 @@ dash.register_page(__name__, name='Student Characteristic')
 
 dataframes = {}
 dataframe_name = None
-guidance = json.loads(open("data/data-guidance.json", "r").read())
+guidance = json.loads(open("../data/data-guidance.json", "r").read())
 
 #--------------------------------------------------------------------------------------------------------
 # Functions
@@ -27,7 +27,7 @@ def trim_dropdown_option(input):
 def load_csv_names():
     import os
     csv_names = []
-    for file in os.listdir("data"):
+    for file in os.listdir("../data"):
         if file.endswith(".csv") and "pupil_characteristic" in file:
             csv_names.append({"label": trim_dropdown_option(file), "value": file})
     return csv_names
@@ -174,7 +174,7 @@ filenames = load_csv_names()
 
 # Load data frames
 for filename in filenames:
-    dataframes[filename["value"]] = pd.read_csv("data/" + filename["value"])
+    dataframes[filename["value"]] = pd.read_csv("../data/" + filename["value"])
 
 #--------------------------------------------------------------------------------------------------------
 # layout
