@@ -3,6 +3,7 @@ from dash import dcc, html, callback_context as ctx, callback
 import plotly.express as px
 import pandas as pd
 from dash.dependencies import Input, Output
+import dash_bootstrap_components as dbc
 import json
 
 dash.register_page(__name__, name='Student Characteristic')
@@ -59,9 +60,8 @@ def get_sub_category_options(filename, categories):
             return []
         
 # figure handler
-def get_figure(file, year, categories, sub_categories, metric, gender, chart_type):
-     df = px.data.iris() 
-     default = px.scatter(df,title = "Default, override later", x="sepal_width", y="sepal_length", color="species")
+def get_figure(file, year, categories, sub_categories, metric, gender, chart_type, description):
+    
      if None not in [file, year, categories, sub_categories, metric]:
         match file:
             case "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv":
@@ -77,7 +77,7 @@ def get_figure(file, year, categories, sub_categories, metric, gender, chart_typ
                 df = dataframes[
                     "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv"
                     ].query(query)
-                chart_title = f"{trim_dropdown_option(metric)} by year" if year == "all" else f"{trim_dropdown_option(metric)} for Academic Year: {year}"
+                chart_title = f"{description} by year" if year == "all" else f"{description} for Academic Year: {year}"
                 fig = None
                 if chart_type == 'bar': 
                     fig = px.bar(
@@ -131,12 +131,28 @@ def get_figure(file, year, categories, sub_categories, metric, gender, chart_typ
                     fig.update_xaxes(title_text="Characteristic")
                     
                 fig.update_yaxes(type="linear", autotypenumbers='convert types', visible=False)
-                    
                 return fig
             case _:
-                return default
+                return get_figure(
+                        "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv",
+                        "all",
+                        ['All pupils', 'Ethnic minor', 'First language'],
+                        ['Total', 'Known or believed to be English'],
+                        "pt_mat_met_higher_standard", 
+                        "Total", 
+                        "bar"
+                    )
      else:
-        return default
+        return get_figure(
+                        "ks2_national_pupil_characteristics_2016_to_2022_provisional.csv",
+                        "all",
+                        ['All pupils', 'Ethnic minor', 'First language'],
+                        ['Total', 'Known or believed to be English'],
+                        "pt_mat_met_higher_standard", 
+                        "Total", 
+                        "bar",
+                        "Percentage met or exceeded Maths Standard"
+                    )
 
 # get metric options from file
 def get_metric_options(filename):
@@ -164,59 +180,103 @@ for filename in filenames:
 # layout
 #--------------------------------------------------------------------------------------------------------
 
-layout = html.Div([
-    dcc.Markdown('## Education Statistics by Student Characteristic'),
-    dcc.Graph(id='graph'),
-    dcc.Dropdown(
-        id='file-selector',
-        options=filenames,
-        placeholder="Select a Data Set...",
+layout = dbc.Container([
+    html.Div([
+        dcc.Markdown('## Education Statistics by Student Characteristic'),
+        dcc.Graph(id='graph')]),
+    dbc.Row([
+        dbc.Col(
+                dcc.Dropdown(
+                    id='file-selector',
+                    options=filenames,
+                    placeholder="Select a Data Set...",
+                    )
         ),
-    dcc.Dropdown(
-        id='year-selector' ,
-        placeholder='Select a Year...',
-        style={"display": "none"}
+        dbc.Col(
+                html.P(children="", id = 'file-selector-description')
+            )]),
+    dbc.Row([
+        dbc.Col(
+            dcc.Dropdown(
+                id='year-selector' ,
+                placeholder='Select a Year...',
+                style={"display": "none"}
+                ),
+            ),
+        dbc.Col(
+                html.P(children="", id = 'year-description')
+            )
+        ]),
+    dbc.Row([
+        dbc.Col(
+            dcc.Dropdown(
+                id='category-selector', 
+                placeholder="Select a category...",
+                style={'display': 'none'},
+                multi=True
+                )
         ),
-    dcc.Dropdown(
-        id='category-selector', 
-        placeholder="Select a category...",
-        style={'display': 'none'},
-        multi=True
+        dbc.Col(
+                html.P(children="", id='category-selector-description')
+            )
+ 
+        ]),
+    dbc.Row([
+        dbc.Col(
+            dcc.Dropdown(
+                id='sub-category-selector',
+                placeholder="Select a sub-category...",
+                style={'display': 'none'},
+                multi=True
+            )
         ),
-    dcc.Dropdown(
-        id='sub-category-selector',
-        placeholder="Select a sub-category...",
-        style={'display': 'none'},
-        multi=True
-    ),
-    dcc.Dropdown(
-        id='metric-selector',
-        placeholder="Select a metric...",
-        style={'display': 'none'}
-        ),  
-    dcc.RadioItems(
-        id='gender-selector',
-        options=[
-            {'label': "All", 'value': "Total"},
-            {'label': "Male", 'value': "Boys"},
-            {'label': "Female", 'value': "Girls"},
-            ],
-        value='Total',
-        style={'display': 'block'},
-        inline=True
+        dbc.Col(
+                html.P(id = "sub-category-description", children="")
+            )
+    ]),
+    dbc.Row([
+        dbc.Col(
+            dcc.Dropdown(
+                id='metric-selector',
+                placeholder="Select a metric...",
+                style={'display': 'none'}
+                )
         ),
-    dcc.RadioItems(
-        id='chart-type-selector',
-        options=[
-            {'label': "Line Chart", 'value': "line"},
-            {'label': "Bar Chart", 'value': "bar"},
-            ],
-        value='bar',
-        inline=True,
-        style={'display': 'block'}
-    )
+        dbc.Col(
+                html.P(id='metric-description', children ='')
+            )
+    ]),
+    dbc.Row([
+        dbc.Col([
+            html.P("Select gender: "),
+            dcc.RadioItems(
+                id='gender-selector',
+                options=[
+                    {'label': " All_ ", 'value': "Total"},
+                    {'label': " Male_ ", 'value': "Boys"},
+                    {'label': " Female ", 'value': "Girls"},
+                    ],
+                value='Total'
+                )
+        ]),
+        dbc.Col([
+            html.P("Select chart type:"),
+            dcc.RadioItems(
+                id='chart-type-selector',
+                options=[
+                    {'label': " Line Chart_ ", 'value': "line"},
+                    {'label': " Bar Chart ", 'value': "bar"},
+                    ],
+                value='bar'
+            )
+        ]),
+        dbc.Col(),
+        dbc.Col()
+        ]),
+        html.P(),
+        html.P("Note: data was not widely collected during the 2019-20 and 2020-21 academic years due to covid"),
+    ])  
 
-])
 
 #--------------------------------------------------------------------------------------------------------
 # callbacks
@@ -224,8 +284,7 @@ layout = html.Div([
 
 # Callback to show file description
 @callback(
-    [Output('file-summary', 'value'), 
-     ],
+    Output('file-selector-description', 'children'), 
     Input('file-selector', 'value')
     )
 def populate_file_description(value):
@@ -234,16 +293,39 @@ def populate_file_description(value):
 
     return [guidance[value]["summary"]]
 
+# Callback to populate category description
+@callback(
+    Output('category-selector-description', 'children'),
+     Input('year-selector', 'value')
+    )
+def populate_category_description(file):
+    if file == None:
+        return ""
+    else:
+        return "The characteristic group(s) of children"
+
+# Callback to update the metric description
+@callback(
+    Output('metric-description', 'children'),
+    [Input('metric-selector', 'value'),
+     Input('file-selector', 'value')]
+    )
+def populate_metric_description(value, filename):
+    if value == None:
+        return ""
+    else:
+        return guidance[filename][value]
 # Callack to update the year selector visibility
 @callback(
-    Output('year-selector', 'style'),
+    [Output('year-selector', 'style'),
+    Output('year-description', 'children')],
     Input('file-selector', 'value')
     )
 def update_year_selector_visibility(value):
     if value is None:
-        return {"display": "none"}
+        return {"display": "none"}, ""
     else:
-        return {"display": "block"}
+        return {"display": "block"}, "Academic year"
 
 # callback to update the year selector options
 @callback(
@@ -258,51 +340,6 @@ def update_year_selector_options(value):
             {"label": str(year)[0:4] + "-" + str(year)[4:], "value": year} 
             for year in dataframes[value]["time_period"].unique()]
         
-
-    # callback to update the category selector visibility
-    @callback(
-        Output('category-selector', 'style'),
-        Input('file-selector', 'value')
-        )
-    def update_category_selector_visibility(value):
-        if value is None:
-            return {"display": "none"}
-        else:
-            return {"display": "block"}
-
-    # callback to update the category selector options
-    @callback(
-        Output('category-selector', 'options'),
-        Input('file-selector', 'value')
-        )
-    def update_category_selector_options(value):
-        if value is None:
-            return []
-        else:
-            return get_category_options(value)
-
-    # callback to update the sub-category selector visibility
-    @callback(
-        Output('sub-category-selector', 'style'),
-        Input('file-selector', 'value')
-        )
-    def update_sub_category_selector_visibility(value):
-        if value is None:
-            return {"display": "none"}
-        else:
-            return {"display": "block"}
-
-    # callback to update the sub-category selector options
-    @callback(
-        Output('sub-category-selector', 'options'),
-        Input('file-selector', 'value'),
-        Input('category-selector', 'value')
-        )
-    def update_sub_category_selector_options(file, categories):
-        if value is None:
-            return []
-        else:
-            return get_sub_category_options(file, categories)
 # Callback to update the category options visibility
 @callback(
     Output('category-selector', 'style'),
@@ -326,13 +363,14 @@ def update_column_options(value):
 
 # Callback to update the sub-category options visibility
 @callback(
-    Output('sub-category-selector', 'style'),
+    [Output('sub-category-selector', 'style'),
+     Output('sub-category-description', 'children')],
     Input('category-selector', 'value'),
     )
 def update_sub_column_visibility(value):
     if value is None:
-        return {'display': 'none'}
-    return {'display': 'block'}
+        return {'display': 'none'}, ""
+    return {'display': 'block'}, "The Characteristic(s)"
 
 # Callback to update the sub-category options
 @callback(
@@ -374,14 +412,11 @@ def update_metric_selector(sub_category, file):
      Input('sub-category-selector', 'value'),
      Input('metric-selector', 'value'),
      Input('gender-selector', 'value'),
-     Input('chart-type-selector', 'value')
+     Input('chart-type-selector', 'value'),
+     Input('metric-description', 'children')
     ]
     
     )
-def update_graph(file, year, categories, sub_categories, metric, gender, chart_type):
-    return get_figure(file, year, categories, sub_categories, metric, gender, chart_type)
-#---------------------------------------------------------------------------------------------------------
-# Run the app
-#---------------------------------------------------------------------------------------------------------
-if __name__ == '__main__':
-    app.run_server(debug=True)
+def update_graph(file, year, categories, sub_categories, metric, gender, chart_type, description):
+    return get_figure(file, year, categories, sub_categories, metric, gender, chart_type, description)
+
