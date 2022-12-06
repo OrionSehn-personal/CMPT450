@@ -97,11 +97,11 @@ def plot_animation_map(df, authorities, column):
     fig.layout.updatemenus[0].buttons[0].args[1]["frame"]["duration"] = 1000
     return fig
 
-with open(r'src\assets\fig.pickle', 'rb') as f:
+with open(r'..\src\assets\fig.pickle', 'rb') as f:
     fig1 = pickle.load(f)
 
 
-df = pd.read_csv(r'data\ks2_regional_and_local_authority_2016_to_2022_provisional.csv', dtype={'la_name': str})
+df = pd.read_csv(r'..\data\ks2_regional_and_local_authority_2016_to_2022_provisional.csv', dtype={'la_name': str})
 
 fig2 = horizontal_total_students(df)
 
