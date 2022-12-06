@@ -249,23 +249,23 @@ layout = dbc.Container([
     dbc.Row([
         dbc.Col([
             html.P("Select gender: "),
-            dcc.RadioItems(
+            dcc.Dropdown(
                 id='gender-selector',
                 options=[
-                    {'label': " All_ ", 'value': "Total"},
-                    {'label': " Male_ ", 'value': "Boys"},
-                    {'label': " Female ", 'value': "Girls"},
+                    {'label': " All", 'value': "Total"},
+                    {'label': " Male", 'value': "Boys"},
+                    {'label': " Female", 'value': "Girls"},
                     ],
                 value='Total'
                 )
         ]),
         dbc.Col([
             html.P("Select chart type:"),
-            dcc.RadioItems(
+            dcc.Dropdown(
                 id='chart-type-selector',
                 options=[
-                    {'label': " Line Chart_ ", 'value': "line"},
-                    {'label': " Bar Chart ", 'value': "bar"},
+                    {'label': " Line Chart", 'value': "line"},
+                    {'label': " Bar Chart", 'value': "bar"},
                     ],
                 value='bar'
             )
