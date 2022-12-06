@@ -5,43 +5,49 @@ import dash_bootstrap_components as dbc
 import json
 import pandas as pd
 import pickle
-
+from flask_caching import Cache
 
 dash.register_page(__name__, name='Regional Data')
 
-# page 2 data
-df = px.data.tips()
 
 layout = html.Div(
     [
         dcc.Markdown('## UK Education System Heatmap')
     ]
 )
+cache = Cache(dash.get_app().server, config={
+    'CACHE_TYPE': 'filesystem',
+    'CACHE_DIR': 'cache'
+})
 
-
-
+@cache.memoize()
 def horizontal_total_students(df):
     '''
     Plot a horizontal bar chart of the number of students who achieved expected standard in maths in each local authority
     '''
+
     df = df[df["geographic_level"] == "Local authority"]
     df = df[df["pt_mat_met_expected_standard"] != "c"]
+
     df = df[df["pt_mat_met_expected_standard"] != "x"]
     df = df[df["gender"] == "Total"]
+
     df["pt_mat_met_expected_standard"] = df["pt_mat_met_expected_standard"].astype(float)
     df = df.sort_values(by=["time_period", "pt_mat_met_expected_standard"], ascending=True)
     fig = px.bar(df,
-    x="pt_mat_met_expected_standard", 
-    y="la_name", 
-    orientation='h', 
-    title=None, 
-    width=400, 
-    height=600, 
-    labels={"pt_mat_met_expected_standard":"% Passing", "la_name": "Local Authority"}, 
-    color= "pt_mat_met_expected_standard", 
-    color_continuous_scale="Hot_r", 
-    range_color=[55,90], 
-    animation_frame="time_period")
+        x="pt_mat_met_expected_standard", 
+        y="la_name", 
+        orientation='h', 
+        title=None, 
+        width=400, 
+        height=600, 
+        labels={"pt_mat_met_expected_standard":"% Passing", "la_name": "Local Authority"}, 
+        color= "pt_mat_met_expected_standard", 
+        color_continuous_scale="Hot_r", 
+        range_color=[55,90], 
+        animation_frame="time_period"
+        )
+
     fig.update(layout_coloraxis_showscale=False)
     fig.update_yaxes(visible=False, showticklabels=False)
     fig.update_xaxes(range=[0,100])
@@ -49,7 +55,7 @@ def horizontal_total_students(df):
 
     return fig
 
-
+@cache.memoize()
 def plot_animation_map(df, authorities, column):
     '''
     generate an animation of the UK with a colour scale based on the values in the column
@@ -61,6 +67,7 @@ def plot_animation_map(df, authorities, column):
     :return: None
 
     '''
+
 
     df = df[df["geographic_level"] == "Local authority"]
     df = df[df["geographic_level"] == "Local authority"]
@@ -90,10 +97,12 @@ def plot_animation_map(df, authorities, column):
     fig.layout.updatemenus[0].buttons[0].args[1]["frame"]["duration"] = 1000
     return fig
 
-with open(r'assets\fig.pickle', 'rb') as f:
+with open(r'src\assets\fig.pickle', 'rb') as f:
     fig1 = pickle.load(f)
 
-df = pd.read_csv(r'..\data\ks2_regional_and_local_authority_2016_to_2022_provisional.csv', dtype={'la_name': str})
+
+df = pd.read_csv(r'data\ks2_regional_and_local_authority_2016_to_2022_provisional.csv', dtype={'la_name': str})
+
 fig2 = horizontal_total_students(df)
 
 layout = html.Div(className='row', children=[

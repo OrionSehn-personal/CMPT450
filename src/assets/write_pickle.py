@@ -5,6 +5,9 @@ import dash_bootstrap_components as dbc
 import json
 import pandas as pd
 import pickle
+import geopandas as gpd
+import pyproj
+import time
 
 def plot_animation_map(df, authorities, column):
     '''
@@ -48,27 +51,60 @@ def plot_animation_map(df, authorities, column):
 
 
 def gen_pickle():
-    authorities = json.load(open(r'..\data\Counties_and_Unitary_Authorities_(December_2021)_UK_BGC.geojson'))
+    t1 = time.time()
+    authorities = gpd.read_file('data\Counties_and_Unitary_Authorities_(December_2021)_UK_BGC.geojson')
+    
+    authorities = authorities.to_crs(pyproj.CRS.from_epsg(4326))
+    
+    df = pd.read_csv(r'data\ks2_regional_and_local_authority_2016_to_2022_provisional.csv', dtype={'la_name': str})
+    
+    merged = authorities.merge(df, left_on='CTYUA21NM', right_on='la_name')
+    
+    merged.geometry = merged.to_crs(merged.estimate_utm_crs()).simplify(2000).to_crs(merged.crs)
+    
+    merged = merged.to_crs(epsg=4326)
+    
+    geojson = merged.__geo_interface__
+    
+    #fig = px.choropleth_mapbox(merged, geojson = merged.geometry, locations = merged.index)
+    
+    #fig.show()
+    
+    #geocol = authorities.pop('geometry')
+    
+    #authorities.insert(0, 'geometry', geocol)
+    
+    #authorities["geometry"] = authorities.to_crs(authorities.estimate_utm_crs()).simplify(1000).to_crs(authorities.crs)
+    #authorities = json.load(open(r'data\Counties_and_Unitary_Authorities_(December_2021)_UK_BGC.geojson'))
 
     # Iterative over JSON
-    for i in range(len(authorities["features"])):
-        # Extract local authority name
-        la = authorities["features"][i]['properties']['CTYUA21NM']
-        # Assign the local authority name to a new 'id' property for later linking to dataframe
-        authorities["features"][i]['id'] = la
+    #for i in range(len(authorities["features"])):
+    #    # Extract local authority name
+    #    la = authorities["features"][i]['properties']['CTYUA21NM']
+    #    # Assign the local authority name to a new 'id' property for later linking to dataframe
+    #    authorities["features"][i]['id'] = la
 
-    df = pd.read_csv(r'..\data\ks2_regional_and_local_authority_2016_to_2022_provisional.csv', dtype={'la_name': str})
-    fig = plot_animation_map(df, authorities, "pt_mat_met_expected_standard")
-
+    #df = pd.read_csv(r'data\ks2_regional_and_local_authority_2016_to_2022_provisional.csv', dtype={'la_name': str})
+    t2 = time.time()
+    fig = plot_animation_map(merged, geojson, "pt_mat_met_expected_standard")
+    print("data fixing time:", t2 - t1)
+    print("plotting time: ", time.time() - t2)
     #write and pickle the figure
+    t3 = time.time()
+    fig.show()
+    t4 = time.time()
+    print("show figure time: ", t4-t3)
     with open('fig.pickle', 'wb') as f:
         pickle.dump(fig, f)
-
+    print("pickle time: ", time.time() - t4)
 
 gen_pickle()
 #read and unpickle the figure
-# with open('fig.pickle', 'rb') as f:
-#     fig = pickle.load(f)
-
-# fig.show()
+t5 = time.time()
+with open('fig.pickle', 'rb') as f:
+     fig = pickle.load(f)
+print("unpickle time: ", time.time() - t5)
+t6 = time.time()
+fig.show()
+print("show figure time 2: ", time.time() - t6)
 

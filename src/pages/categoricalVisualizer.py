@@ -5,13 +5,18 @@ import pandas as pd
 from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 import json
+from flask_caching import Cache
 
 dash.register_page(__name__, name='Student Characteristic')
 
 dataframes = {}
 dataframe_name = None
-guidance = json.loads(open("../data/data-guidance.json", "r").read())
+guidance = json.loads(open("data/data-guidance.json", "r").read())
 
+cache = Cache(dash.get_app().server, config={
+    'CACHE_TYPE': 'filesystem',
+    'CACHE_DIR': 'cache'
+})
 #--------------------------------------------------------------------------------------------------------
 # Functions
 #--------------------------------------------------------------------------------------------------------
@@ -27,7 +32,7 @@ def trim_dropdown_option(input):
 def load_csv_names():
     import os
     csv_names = []
-    for file in os.listdir("../data"):
+    for file in os.listdir("data"):
         if file.endswith(".csv") and "pupil_characteristic" in file:
             csv_names.append({"label": trim_dropdown_option(file), "value": file})
     return csv_names
@@ -60,6 +65,7 @@ def get_sub_category_options(filename, categories):
             return []
         
 # figure handler
+@cache.memoize()
 def get_figure(file, year, categories, sub_categories, metric, gender, chart_type, description):
     
      if None not in [file, year, categories, sub_categories, metric]:
@@ -174,7 +180,7 @@ filenames = load_csv_names()
 
 # Load data frames
 for filename in filenames:
-    dataframes[filename["value"]] = pd.read_csv("../data/" + filename["value"])
+    dataframes[filename["value"]] = pd.read_csv("data/" + filename["value"])
 
 #--------------------------------------------------------------------------------------------------------
 # layout
@@ -249,23 +255,23 @@ layout = dbc.Container([
     dbc.Row([
         dbc.Col([
             html.P("Select gender: "),
-            dcc.RadioItems(
+            dcc.Dropdown(
                 id='gender-selector',
                 options=[
-                    {'label': " All_ ", 'value': "Total"},
-                    {'label': " Male_ ", 'value': "Boys"},
-                    {'label': " Female ", 'value': "Girls"},
+                    {'label': " All", 'value': "Total"},
+                    {'label': " Male", 'value': "Boys"},
+                    {'label': " Female", 'value': "Girls"},
                     ],
                 value='Total'
                 )
         ]),
         dbc.Col([
             html.P("Select chart type:"),
-            dcc.RadioItems(
+            dcc.Dropdown(
                 id='chart-type-selector',
                 options=[
-                    {'label': " Line Chart_ ", 'value': "line"},
-                    {'label': " Bar Chart ", 'value': "bar"},
+                    {'label': " Line Chart", 'value': "line"},
+                    {'label': " Bar Chart", 'value': "bar"},
                     ],
                 value='bar'
             )

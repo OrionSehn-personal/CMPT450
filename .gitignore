@@ -4,3 +4,4 @@
 .DS_Store
 /src/pages/__pycache__
 /CMPT450.pyproj.user
+/src/__pycache__/app.cpython-310.pyc
