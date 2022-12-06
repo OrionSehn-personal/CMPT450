@@ -11,7 +11,7 @@ dash.register_page(__name__, name='Student Characteristic')
 
 dataframes = {}
 dataframe_name = None
-guidance = json.loads(open("../data/data-guidance.json", "r").read())
+guidance = json.loads(open("data/data-guidance.json", "r").read())
 
 cache = Cache(dash.get_app().server, config={
     'CACHE_TYPE': 'filesystem',
