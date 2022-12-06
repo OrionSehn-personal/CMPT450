@@ -1,19 +1,10 @@
 import dash
 from dash import html, dcc
 import dash_bootstrap_components as dbc
-from flask_caching import Cache
 
 app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.SPACELAB])
-
-
-cache = Cache(app.server, config={
-    'CACHE_TYPE': 'filesystem',
-    'CACHE_DIR': 'cache'
-})
-
 sidebar = dbc.Nav(
             [
-                
                 dbc.NavLink(
                     [
                         html.Div(page["name"], className="ms-2"),
@@ -28,7 +19,7 @@ sidebar = dbc.Nav(
             className="bg-light",
 )
 
-app.layout =  dbc.Container(
+app.layout = dbc.Container(
     [
     dbc.Row(
         [
@@ -59,4 +50,4 @@ app.layout =  dbc.Container(
 
 
 if __name__ == "__main__":
-    app.run(threaded=True, debug=False)
+    app.run(debug=False)
